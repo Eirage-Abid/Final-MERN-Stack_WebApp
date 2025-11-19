@@ -1,12 +1,13 @@
-import app from "./app.js";
-import mongoose from "mongoose";
+// Configure dotenv FIRST before any other imports
+import dotenv from "dotenv";
+dotenv.config();
 
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log("DB connected");
-    app.listen(process.env.PORT, () =>
-      console.log("Server running on " + process.env.PORT)
-    );
-  })
-  .catch(console.error);
+import app from "./src/app.js";
+import { connectDB } from "./src/config/connectDB.js";
+import { PORT } from "./src/config/env.js";
+
+// Connect to database
+connectDB();
+
+// Start server
+app.listen(PORT, () => console.log("Server running on port " + PORT));
