@@ -1,0 +1,50 @@
+version: "3.8"
+
+networks:
+  backend-network:
+    driver: bridge
+
+services:
+  backend:
+    build:
+      context: ./api # Indented correctly under build
+    env_file:
+      - ./api/.env
+    container_name: mern-backend
+    ports:
+      - "5000:5000"
+    environment:
+      - JWT_ACCESS_SECRET=mysecrettoken # Load the JWT_SECRET variable from the .env
+      - JWT_REFRESH_SECRET=mysecrettoken2
+      - MONGO_URI=mongodb://mongo:27017/task-track-lite
+
+    depends_on:
+      - mongo
+    networks:
+      - backend-network
+
+  frontend:
+    build:
+      context: ./web # Indented correctly under build
+    env_file:
+      - ./web/.env
+    container_name: mern-frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    networks:
+      - backend-network
+
+  mongo:
+    image: mongo
+    container_name: mern-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - backend-network
+
+volumes:
+  mongo-data:

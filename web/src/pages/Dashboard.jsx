@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
-import { getTasks } from "../api/tasks";
+import { getTasks, deleteTask } from "../api/tasks";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -31,6 +33,12 @@ export default function Dashboard() {
       setTotal(res.data.meta.total);
     } catch (e) {
       console.log(e);
+      // Handle 401 unauthorized - logout and redirect to login
+      if (e.response?.status === 401) {
+        logout();
+        navigate("/login");
+        return;
+      }
       alert("Failed to load tasks");
     } finally {
       setLoading(false);
@@ -43,9 +51,43 @@ export default function Dashboard() {
 
   const totalPages = Math.ceil(total / limit);
 
+  const handleDelete = async (taskId) => {
+    if (!window.confirm("Are you sure you want to delete this task?")) {
+      return;
+    }
+
+    try {
+      await deleteTask(taskId);
+      // Refresh the task list
+      fetchTasks();
+    } catch (error) {
+      console.error(error);
+      // Handle 401 unauthorized - logout and redirect to login
+      if (error.response?.status === 401) {
+        logout();
+        navigate("/login");
+        return;
+      }
+      alert("Failed to delete task");
+    }
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
   return (
     <div style={{ maxWidth: 900, margin: "30px auto" }}>
-      <h2>Your Tasks</h2>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+        <h2>Your Tasks</h2>
+        <button
+          onClick={handleLogout}
+          style={{ backgroundColor: "#6c757d", color: "white", padding: "8px 16px", border: "none", borderRadius: 4, cursor: "pointer" }}
+        >
+          Logout
+        </button>
+      </div>
 
       {/* Search + Filter */}
       <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
@@ -107,6 +149,13 @@ export default function Dashboard() {
               style={{ marginLeft: 10 }}
             >
               Edit
+            </button>
+
+            <button
+              onClick={() => handleDelete(t._id)}
+              style={{ marginLeft: 10, backgroundColor: "#dc3545", color: "white" }}
+            >
+              Delete
             </button>
           </li>
         ))}
