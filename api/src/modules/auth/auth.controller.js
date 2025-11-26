@@ -59,9 +59,10 @@ export const login = async (req, res) => {
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === 'production',
       sameSite: "none",
-      path: "/api/auth/refresh",
+      // Use root path so the cookie is accessible to refresh route and can be cleared from client
+      path: "/",
     });
 
     return res.json({ accessToken });
@@ -73,16 +74,26 @@ export const login = async (req, res) => {
 
 export const refresh = async (req, res) => {
   try {
-    const token = req.cookies.refreshToken;
+    const token = req.cookies.refreshToken; //Get refresh token from the cookie
     if (!token) return res.status(401).json({ error: "No refresh token" });
 
+    console.log("verifying refresh token")
     const payload = jwt.verify(token, JWT_REFRESH_SECRET);
+
+    if(!payload){
+      console.error("Invalid refresh token")
+      return res.status(401).json({error: "Invalid refersh token"})
+    }
 
     const accessToken = jwt.sign(
       { userId: payload.userId },
       JWT_ACCESS_SECRET,
       { expiresIn: "15m" }
     );
+
+
+    console.log("Refresh successful, new access token generated");
+
 
     return res.json({ accessToken });
   } catch (error) {

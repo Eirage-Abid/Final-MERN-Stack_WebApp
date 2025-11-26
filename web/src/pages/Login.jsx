@@ -23,7 +23,7 @@ export default function Login() {
       login(res.accessToken); // store token in memory
       navigate("/dashboard");
     } catch (err) {
-      console.error(err);
+      console.log(err);
       alert("Invalid credentials");
     }
   };

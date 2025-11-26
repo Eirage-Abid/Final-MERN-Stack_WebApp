@@ -1,7 +1,6 @@
 import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-
 import { FRONTEND_URL } from "./config/env.js";
 import authRoutes from "./modules/auth/auth.routes.js";
 import taskRoutes from "./modules/tasks/task.routes.js";
@@ -21,7 +20,11 @@ app.use(
       
       // In development, allow any localhost origin
       if (process.env.NODE_ENV !== 'production') {
-        if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
+        if (
+        origin.startsWith('http://localhost:') || 
+        origin.startsWith('http://127.0.0.1:') || 
+        origin === 'http://mern-frontend:5176'
+      ) {
           return callback(null, true);
         }
       }
